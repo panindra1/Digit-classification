@@ -31,6 +31,10 @@ public class NaiveBayse {
     static Map<Integer, ArrayList<Integer>> confusionMap = new HashMap<>();
     
     static double[] totalProbability = new double[10];    
+    static double laplaceConstantNum = 1;
+    static double laplaceConstantDen = laplaceConstantNum * 2;
+    static double laplaceConstant = laplaceConstantNum/laplaceConstantDen;
+        
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
         // TODO code application logic here
@@ -98,21 +102,20 @@ public class NaiveBayse {
         //System.out.println(backgroundProbabilityMap);
        
          
-        double laplaceConstantNum = 50;
-        double laplaceConstantDen = laplaceConstantNum * 2;
-        double laplaceConstant = laplaceConstantNum/laplaceConstantDen;
-        
         for (Integer key : foregroundProbabilityMap.keySet()) {
             ArrayList<ArrayList<Double>> entry = foregroundProbabilityMap.get(key);
             
-            
+           /* 
             for(ArrayList<Double> valueList : entry) {
                 for(int val = 0; val < valueList.size(); val++) {
                     if(valueList.get(val) == 0) {
                         valueList.set(val, laplaceConstant);
                     }
+                    else {
+                        valueList.set(val, laplaceConstant);
+                    }
                 }
-            }
+            }*/
         }
         //System.out.println(foregroundProbabilityMap);
         //System.out.println(backgroundProbabilityMap);
@@ -267,8 +270,8 @@ public class NaiveBayse {
                     foreground++;
                 }
             }
-            foregroundProb = foreground/linesToProcess.size();
-            backgroundProb = background/linesToProcess.size();
+            foregroundProb = (foreground+laplaceConstantNum)/(linesToProcess.size() + laplaceConstantDen);
+            backgroundProb = (background+laplaceConstantNum)/(linesToProcess.size() + laplaceConstantDen);
             fgProbabilityList.add(foregroundProb);
             bgProbabilityList.add(backgroundProb);
             

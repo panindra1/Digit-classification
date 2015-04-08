@@ -63,11 +63,11 @@ public class NaiveBayse {
             i = i +1;
         }
         
-        System.out.println("Array size" + indexOfClassMap.get(8).size());
+        //System.out.println("Array size" + indexOfClassMap.get(8).size());
                  
         //iterating over keys 
         for (Integer key : indexOfClassMap.keySet()) {
-            System.out.println("Key = " + key);
+            //System.out.println("Key = " + key);
             ArrayList<Integer> values = indexOfClassMap.get(key);
             Collections.sort(values);
             ArrayList<Integer> newValues = new ArrayList<>();
@@ -99,25 +99,6 @@ public class NaiveBayse {
         }    
         
        // System.out.println(foregroundProbabilityMap);
-        //System.out.println(backgroundProbabilityMap);
-       
-         
-        for (Integer key : foregroundProbabilityMap.keySet()) {
-            ArrayList<ArrayList<Double>> entry = foregroundProbabilityMap.get(key);
-            
-           /* 
-            for(ArrayList<Double> valueList : entry) {
-                for(int val = 0; val < valueList.size(); val++) {
-                    if(valueList.get(val) == 0) {
-                        valueList.set(val, laplaceConstant);
-                    }
-                    else {
-                        valueList.set(val, laplaceConstant);
-                    }
-                }
-            }*/
-        }
-        //System.out.println(foregroundProbabilityMap);
         //System.out.println(backgroundProbabilityMap);
         
         for (Integer key : backgroundProbabilityMap.keySet()) {

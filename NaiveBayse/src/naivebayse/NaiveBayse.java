@@ -179,6 +179,16 @@ public class NaiveBayse {
             }
             System.out.println(" ");
         }
+        
+        //Calculating LOG Odds 
+        //calcLogOdds(0, 6);
+        //calcLogOdds(3,  5);
+        //calcLogOdds(1, 9);
+        //calcLogOdds(8, 6);
+        
+        
+        calcLogOdds(0, 9);
+        calcLogOdds(0, 8);
 
     }
     
@@ -281,6 +291,55 @@ public class NaiveBayse {
         }
         
     }
+    
+    public static void calcLogOdds(int c1, int c2){
+    	ArrayList<ArrayList<Double>> c1Values = foregroundProbabilityMap.get(c1);
+    	ArrayList<ArrayList<Double>> c2Values = foregroundProbabilityMap.get(c2);
+    	
+    	ArrayList<ArrayList<Double>> oddsRatioMatrix = new ArrayList<ArrayList<Double>>();
+    	ArrayList<Double> currLineValues;
+    	double oddRatioVal = 1; 
+    	for(int lineNum =0; lineNum < c1Values.size(); lineNum++){
+    		currLineValues = new ArrayList<Double>();
+    		for(int pos = 0; pos < c1Values.get(0).size(); pos++){
+    			oddRatioVal = c1Values.get(lineNum).get(pos)/c2Values.get(lineNum).get(pos);
+    			currLineValues.add(oddRatioVal);
+    		}
+    		oddsRatioMatrix.add(currLineValues);
+    	}
+    			
+    	System.out.println("---------------------------------------------------");
+    	System.out.println("Odds Ratio matrix of " + c1 + " " + c2);
+    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
+    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
+    			System.out.print(String.format("%.2f ", oddsRatioMatrix.get(lineNum).get(pos)));
+    		}
+    		System.out.println();
+    	}
+    	
+    	System.out.println("--------------------------------------------------");
+    	System.out.println("Odds Ratio Map for " + c1 + " " + c2);
+    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
+    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
+    			double logVal = Math.log(oddsRatioMatrix.get(lineNum).get(pos));
+    			if(logVal > 0){
+    				if(logVal < 2){
+    					//logval close to one
+    					System.out.print(" ");
+    				}
+    				else {
+    					System.out.print("+");
+    				}
+    			}
+    			else {
+    				System.out.print("+");
+    			}
+    			
+    		}
+    		System.out.println();
+    	}
+    	
+    } //end func
    
     
 }

@@ -1,10 +1,7 @@
 package pixelgroups;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by darshan on 4/12/15.
@@ -14,16 +11,19 @@ public class TrainingInputReader
 {
     Map<Integer, Map<Integer, Integer[]>> likelihoods; //Fij : {location : class count array}
 
-    public TrainingInputReader(String imageFile, String labelFile, FrameType frameType, Boolean isOverlapping)
+    public TrainingInputReader(String imageFile, String labelFile, FrameType frameType, Boolean isOverlapping,
+                               ImageFormat imageFormat, Integer numberOfClasses, Integer imageRowSize,
+                               Integer imageColumnSize)
         throws IOException
     {
-        super(imageFile, labelFile, frameType, isOverlapping);
+        super(imageFile, labelFile, frameType, isOverlapping, imageFormat, numberOfClasses, imageRowSize, imageColumnSize);
         init();
     }
 
     private void init()
     {
         likelihoods = new HashMap<Integer, Map<Integer, Integer[]>>();
+        calculateLikelihoods();
     }
 
     private void calculateLikelihoods()
@@ -31,7 +31,8 @@ public class TrainingInputReader
         for(int i = 0 ; i < images.size() ; i ++)
         {
             Integer label = labels.get(i);
-            List<Integer> frames = Util.getEncodedFramesForImage(images.get(i), frameType, isOverlapping);
+            //System.out.println("Label : " + label);
+            List<Integer> frames = Util.getEncodedFramesForImage(images.get(i), frameType, isOverlapping, imageFormat);
             for(int j = 0 ; j < frames.size() ; j ++)
             {
                 insertLikelihood(frames.get(j), label, j);
@@ -47,17 +48,16 @@ public class TrainingInputReader
         {
             valueLikelihood = new HashMap<Integer, Integer[]>();
         }
-        else
+        Integer[] clazzCountArray = valueLikelihood.get(location);
+        if(clazzCountArray == null)
         {
-            Integer[] clazzCountArray = valueLikelihood.get(location);
-            if(clazzCountArray == null)
-            {
-                clazzCountArray = new Integer[10];
-                for(int i = 0 ; i < clazzCountArray.length ; i ++) clazzCountArray[i] = 0;
-            }
-            clazzCountArray[clazz] += 1;
-            valueLikelihood.put(location, clazzCountArray);
+            clazzCountArray = new Integer[numberOfClasses];
+            for(int i = 0 ; i < clazzCountArray.length ; i ++ ) { clazzCountArray[i] = 0; }
         }
+        clazzCountArray[clazz] += 1;
+        valueLikelihood.put(location, clazzCountArray);
+        likelihoods.put(frameValue, valueLikelihood);
+        //System.out.println("For value " + frameValue + ", at location " + location + " , array is " + Arrays.toString(clazzCountArray));
     }
 
     public Integer getLikelihoodForValueAtLocationForClass(Integer value, Integer location, Integer clazz)
@@ -69,9 +69,10 @@ public class TrainingInputReader
             Integer[] clazzValues = valueLikelihood.get(location);
             if(clazzValues != null)
             {
-                likelihood = clazzValues[clazz];
+                likelihood += clazzValues[clazz];
             }
         }
+        //System.out.println("Likelihood value at location : " + likelihood);
         return likelihood;
     }
 

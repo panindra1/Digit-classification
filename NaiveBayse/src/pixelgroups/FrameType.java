@@ -5,6 +5,7 @@ package pixelgroups;
  */
 public enum FrameType
 {
+    ONE_ONE(1, 1),
     TWO_TWO(2, 2),
     TWO_FOUR(2, 4),
     FOUR_TWO(4, 2),

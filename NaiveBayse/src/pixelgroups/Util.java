@@ -1,5 +1,6 @@
 package pixelgroups;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,21 +9,22 @@ import java.util.List;
  */
 public class Util
 {
-    public static List<Integer> getEncodedFramesForImage(Byte[][] image, FrameType frameType, Boolean isOverlapping)
+    public static List<Integer>
+    getEncodedFramesForImage(Byte[][] image, FrameType frameType, Boolean isOverlapping, ImageFormat imageFormat)
     {
         List<Integer> frames;
         if(isOverlapping)
         {
-            frames = getOverlappingFrames(image, frameType);
+            frames = getOverlappingFrames(image, frameType, imageFormat);
         }
         else
         {
-            frames = getDiscreteFrames(image, frameType);
+            frames = getDiscreteFrames(image, frameType, imageFormat);
         }
         return frames;
     }
 
-    private static List<Integer> getOverlappingFrames(Byte[][] image, FrameType frameType)
+    private static List<Integer> getOverlappingFrames(Byte[][] image, FrameType frameType, ImageFormat imageFormat)
     {
         List<Integer> overLappingFrames = new ArrayList<Integer>();
         int windowColLength = image.length - frameType.noOfCols + 1;
@@ -38,15 +40,16 @@ public class Util
                     for(int n = 0 ; n < frameType.noOfRows ; n ++)
                     {
                         frame[m][n] = image[i + m][j + n];
+                        //System.out.println("frame " + m + " " + n + " set to " + frame[m][n]);
                     }
                 }
-                overLappingFrames.add(calculateFrameValue(frame));
+                overLappingFrames.add(calculateFrameValue(frame, imageFormat));
             }
         }
         return overLappingFrames;
     }
 
-    private static List<Integer> getDiscreteFrames(Byte[][] image, FrameType frameType)
+    private static List<Integer> getDiscreteFrames(Byte[][] image, FrameType frameType, ImageFormat imageFormat)
     {
         List<Integer> overLappingFrames = new ArrayList<Integer>();
         int windowColLength = image.length - frameType.noOfCols + 1;
@@ -62,24 +65,26 @@ public class Util
                     for(int n = 0 ; n < frameType.noOfRows ; n ++)
                     {
                         frame[m][n] = image[i + m][j + n];
+                       // System.out.println("frame " + m + " " + n + " set to " + frame[m][n]);
                     }
                 }
-                overLappingFrames.add(calculateFrameValue(frame));
+                overLappingFrames.add(calculateFrameValue(frame, imageFormat));
             }
         }
         return overLappingFrames;
     }
 
-    private static Integer calculateFrameValue(Byte[][] frame)
+    private static Integer calculateFrameValue(Byte[][] frame, ImageFormat imageFormat)
     {
-        Integer frameValue = 0;
+        String frameValue = "";
         for(int i = 0 ; i < frame.length ; i ++)
         {
             for(int j = 0 ; j < frame[i].length ; j ++)
             {
-                frameValue = (frameValue << 1) + frame[i][j];
+                frameValue = frameValue + frame[i][j];
             }
         }
-        return frameValue;
+        Integer frameValueBase10 = Integer.valueOf(frameValue, imageFormat.getBase());
+        return frameValueBase10;
     }
 }

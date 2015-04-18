@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,7 +31,8 @@ public class NaiveBayse {
     static Map<Integer, Double> prioriMap = new HashMap<>();
     static Map<Integer, ArrayList<Integer>> confusionMap = new HashMap<>();
     
-    static double[] totalProbability = new double[10];    
+    static double[] totalProbability = new double[10];   
+    static double[] maxProbability = new double[10];
     static double laplaceConstantNum = 1;
     static double laplaceConstantDen = laplaceConstantNum * 2;
     static double laplaceConstant = laplaceConstantNum/laplaceConstantDen;
@@ -113,11 +115,13 @@ public class NaiveBayse {
         }
         
         ArrayList<Integer> result = new ArrayList<>();
+        ArrayList<Integer> result_ML = new ArrayList<Integer>();
         
         filename = "testimages";
         file = new File(filename);
         br = new BufferedReader(new FileReader(file));
-        int lineNum = 0;        
+        int lineNum = 0; 
+        int[] classDigitValues = new int[2];
         
         String[] testDigit  = new String[28];
         while ((line = br.readLine()) != null) {
@@ -125,7 +129,9 @@ public class NaiveBayse {
             
             if(lineNum == 27) {
                 lineNum = -1;
-                result.add(giveClass(testDigit));
+                classDigitValues = giveClass(testDigit);
+                result.add(classDigitValues[0]);
+                result_ML.add(classDigitValues[1]);
                 testDigit = new String[28];
             }
             lineNum++;
@@ -136,12 +142,17 @@ public class NaiveBayse {
         br = new BufferedReader(new FileReader(file));
         line = "";
         int classVal = 0;
-        int positiveCount = 0;        
+        int positiveCountForMAP = 0;  
+        int positiveCountForML = 0;
+        
         
         while ((line = br.readLine()) != null) {                        
             int value = Integer.parseInt(line);            
             if( value == result.get(classVal)) {
-                positiveCount++;                
+                positiveCountForMAP++; 
+            }
+            if( value == result_ML.get(classVal)){
+            	positiveCountForML++;
             }    
              
             if(confusionMap.containsKey(value)) {                    
@@ -160,8 +171,10 @@ public class NaiveBayse {
             classVal++;
         }
         
-        double accuracy = (double)positiveCount/classVal;
-        System.out.println("Accuracy is " + accuracy * 100);
+        double accuracy = (double)positiveCountForMAP/classVal;
+        System.out.println("Accuracy (for MAP) is " + accuracy * 100);
+        
+        System.out.println("Accuracy (for Max Likelihood) = " + ((double)positiveCountForML/classVal) * 100);
         
         ArrayList<Integer> totalValMat  = new ArrayList<>();
         for(int index = 0 ; index < confusionMap.size(); index++) {
@@ -181,18 +194,18 @@ public class NaiveBayse {
         }
         
         //Calculating LOG Odds 
-        //calcLogOdds(0, 6);
-        //calcLogOdds(3,  5);
-        //calcLogOdds(1, 9);
+        calcLogOdds(0, 6);
+        calcLogOdds(3,  5);
+        calcLogOdds(1, 9);
         //calcLogOdds(8, 6);
         
-        
-        calcLogOdds(0, 9);
-        calcLogOdds(0, 8);
+        //calcLogOdds(7, 9);
+        //calcLogOdds(0, 9);
+        //calcLogOdds(8, 3);
 
     }
     
-    static int giveClass(String[] testDigit) {
+    static int[] giveClass(String[] testDigit) {
         int clssDigit = 0, lineNum = 0;;
         
         double probCLass;
@@ -225,7 +238,8 @@ public class NaiveBayse {
                 }
                 
             }  
-            totalProbability[cls] = probCLass * probabilityClsVals;          
+            totalProbability[cls] = probCLass * probabilityClsVals;    
+            maxProbability[cls] = probabilityClsVals;
         }
         
         double max = 0;
@@ -235,8 +249,23 @@ public class NaiveBayse {
                 max = totalProbability[high];
                 clssDigit = high;
             }
-        }        
-        return clssDigit;        
+        }
+        
+        int[] classDigit = new int[2];  
+        classDigit[0] = clssDigit;
+        
+        max = 0;
+        clssDigit=0;
+        for(int high = 0; high < maxProbability.length; high++) {            
+            if(max < maxProbability[high]) {
+                max = maxProbability[high];
+                clssDigit = high;
+            }
+        }
+        
+        classDigit[1] = clssDigit;
+        
+        return classDigit;        
     }
     
     public static void processLineSet(ArrayList<char[]> linesToProcess, int classNum){
@@ -307,32 +336,36 @@ public class NaiveBayse {
     		}
     		oddsRatioMatrix.add(currLineValues);
     	}
-    			
-    	System.out.println("---------------------------------------------------");
-    	System.out.println("Odds Ratio matrix of " + c1 + " " + c2);
-    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
-    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
-    			System.out.print(String.format("%.2f ", oddsRatioMatrix.get(lineNum).get(pos)));
-    		}
-    		System.out.println();
-    	}
+    	
+    	//print the foreground prob of C1 and C2 in Ascii format
+    	printAsciiMap(c1Values, c1);
+    	printAsciiMap(c2Values, c2);
+    	    			
+//    	System.out.println("---------------------------------------------------");
+//    	System.out.println("Odds Ratio matrix of " + c1 + " " + c2);
+//    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
+//    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
+//    			System.out.print(String.format("%.2f ", oddsRatioMatrix.get(lineNum).get(pos)));
+//    		}
+//    		System.out.println();
+//    	}
     	
     	System.out.println("--------------------------------------------------");
     	System.out.println("Odds Ratio Map for " + c1 + " " + c2);
     	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
     		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
     			double logVal = Math.log(oddsRatioMatrix.get(lineNum).get(pos));
-    			if(logVal > 0){
-    				if(logVal < 2){
-    					//logval close to one
-    					System.out.print(" ");
-    				}
-    				else {
-    					System.out.print("+");
-    				}
-    			}
-    			else {
+    			if(logVal > 0.5){
     				System.out.print("+");
+    			
+    			}
+    			else if (logVal < 0.5 && logVal > -0.5){
+    				System.out.print(".");
+    				
+    			}
+    			
+    			else {
+    				System.out.print("-");
     			}
     			
     		}
@@ -341,5 +374,29 @@ public class NaiveBayse {
     	
     } //end func
    
+    private static void printAsciiMap(ArrayList<ArrayList<Double>> probabilityMap, int classVal){
+    	
+    	System.out.println("\nAscii map of " + classVal);
+    	for(int lineNum = 0 ; lineNum < probabilityMap.size(); lineNum++){
+    		for(int pos = 0; pos < probabilityMap.get(lineNum).size(); pos++){
+    			double value = (probabilityMap.get(lineNum).get(pos));
+    			if(value > 0.5){
+    				System.out.print("+");
+    			
+    			}
+    			else if (value < 0.5 && value > -0.5){
+    				System.out.print(".");
+    				
+    			}
+    			
+    			else {
+    				System.out.print("-");
+    			}
+    			
+    		}
+    		System.out.println();
+    	}
+    	//System.out.println("-----------------------------------------------------\n");
+    }// end func
     
 }

@@ -36,6 +36,11 @@ public class NaiveBayse {
     static double laplaceConstantNum = 1;
     static double laplaceConstantDen = laplaceConstantNum * 2;
     static double laplaceConstant = laplaceConstantNum/laplaceConstantDen;
+    
+    static ArrayList<Double> result_prob = new ArrayList<Double>();
+    static ArrayList<Integer> result = new ArrayList<>();
+    static ArrayList<Integer> result_ML = new ArrayList<Integer>();
+            
         
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
@@ -114,8 +119,8 @@ public class NaiveBayse {
             }
         }
         
-        ArrayList<Integer> result = new ArrayList<>();
-        ArrayList<Integer> result_ML = new ArrayList<Integer>();
+        
+        
         
         filename = "testimages";
         file = new File(filename);
@@ -186,22 +191,43 @@ public class NaiveBayse {
             //System.out.println("Confusion Matrix :" + confusionMap.get(index));            
         }
         
+        double[][] confusionMatrix = new double[10][10]; 
         for(int index = 0 ; index < confusionMap.size(); index++) {
             for(int col = 0 ; col < confusionMap.size(); col++) {
-                System.out.print(String.format("%.2f ",((double)(confusionMap.get(index).get(col)) / totalValMat.get(index) * 100)));            
+            	confusionMatrix[index][col] = ((double)(confusionMap.get(index).get(col)) / totalValMat.get(index) * 100);
+                System.out.print(String.format("%6.2f ", confusionMatrix[index][col]));            
+            }
+            System.out.println(" ");
+        }
+        
+        //print the classification rate for each digit (percentage of all test images of a given digit correctly classified). 
+        System.out.println("\nClassification rate of each class");
+        for(int index = 0 ; index < confusionMap.size(); index++) {
+            for(int col = 0 ; col < confusionMap.size(); col++) {
+                if(index == col){
+                	System.out.println("Class " + index + " : " + confusionMatrix[index][col]);
+
+                }
             }
             System.out.println(" ");
         }
         
         //Calculating LOG Odds 
-        calcLogOdds(0, 6);
-        calcLogOdds(3,  5);
-        calcLogOdds(1, 9);
+        calcLogOdds(4, 9);
+        //calcLogOdds(7, 9);
+        //calcLogOdds(8, 3);
+        //calcLogOdds(3,  5);
+        
+        //calcLogOdds(0, 6);
+        //calcLogOdds(3,  5);
+        //calcLogOdds(1, 9);
         //calcLogOdds(8, 6);
         
-        //calcLogOdds(7, 9);
+        
         //calcLogOdds(0, 9);
         //calcLogOdds(8, 3);
+        
+        showPrototypicalInstance();
 
     }
     
@@ -253,6 +279,7 @@ public class NaiveBayse {
         
         int[] classDigit = new int[2];  
         classDigit[0] = clssDigit;
+        result_prob.add(totalProbability[clssDigit]);
         
         max = 0;
         clssDigit=0;
@@ -341,14 +368,17 @@ public class NaiveBayse {
     	printAsciiMap(c1Values, c1);
     	printAsciiMap(c2Values, c2);
     	    			
-//    	System.out.println("---------------------------------------------------");
-//    	System.out.println("Odds Ratio matrix of " + c1 + " " + c2);
-//    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
-//    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
-//    			System.out.print(String.format("%.2f ", oddsRatioMatrix.get(lineNum).get(pos)));
-//    		}
-//    		System.out.println();
-//    	}
+    	System.out.println("---------------------------------------------------");
+    	System.out.println("Odds Ratio matrix of " + c1 + " " + c2);
+    	for(int lineNum = 0 ; lineNum < oddsRatioMatrix.size(); lineNum++){
+    		System.out.print("[");
+    		for(int pos = 0; pos < oddsRatioMatrix.get(0).size(); pos++){
+    			double logValue = Math.log(oddsRatioMatrix.get(lineNum).get(pos));
+    			System.out.print(String.format("%6.2f ", logValue) + ",");
+    		}
+    		System.out.print("],");
+    		System.out.println();
+    	}
     	
     	System.out.println("--------------------------------------------------");
     	System.out.println("Odds Ratio Map for " + c1 + " " + c2);
@@ -376,7 +406,18 @@ public class NaiveBayse {
    
     private static void printAsciiMap(ArrayList<ArrayList<Double>> probabilityMap, int classVal){
     	
+    	
     	System.out.println("\nAscii map of " + classVal);
+    	
+    	for(int lineNum = 0 ; lineNum < probabilityMap.size(); lineNum++){
+    		System.out.print("[");
+    		for (int pos=0; pos < probabilityMap.get(lineNum).size(); pos++ ){
+    			System.out.print(String.format("%6.2f", Math.log(probabilityMap.get(lineNum).get(pos))) + ", ");
+    		}
+    		System.out.print("],");
+    		System.out.println();
+    	}
+    		
     	for(int lineNum = 0 ; lineNum < probabilityMap.size(); lineNum++){
     		for(int pos = 0; pos < probabilityMap.get(lineNum).size(); pos++){
     			double value = (probabilityMap.get(lineNum).get(pos));
@@ -398,5 +439,69 @@ public class NaiveBayse {
     	}
     	//System.out.println("-----------------------------------------------------\n");
     }// end func
+    
+    private static void showPrototypicalInstance() throws NumberFormatException, IOException{
+    	String filename = "testlabels";
+        File file = new File(filename);
+        BufferedReader br = new BufferedReader(new FileReader(file));
+		
+        String line = "";
+        int classVal = 0;
+        int lineIndex = 0;
+        
+        ArrayList<ArrayList<Double>> probValues = new ArrayList<ArrayList<Double>>();
+        ArrayList<ArrayList<Integer>> positions = new ArrayList<ArrayList<Integer>>();
+        
+        for(int i=0;i<=9;i++){
+        	probValues.add(new ArrayList<Double>());
+        	positions.add(new ArrayList<Integer>());
+        }
+        
+        
+        while ((line = br.readLine()) != null) {   
+        	int value = Integer.parseInt(line);            
+            if( value == result.get(lineIndex)) {
+            		ArrayList<Integer> currPos = positions.get(value);
+            		currPos.add(lineIndex);
+            		positions.set(value, currPos);
+            	
+//            	else {
+//            		ArrayList<Integer> currPos = new ArrayList<Integer>();
+//            		currPos.add(lineIndex);
+//            		positions.set(value, currPos);
+//            	}
+            	
+            		ArrayList<Double> currVals = probValues.get(value);
+            		currVals.add(result_prob.get(lineIndex));
+            		probValues.set(value, currVals);
+            	
+//            		else {
+//            		ArrayList<Double> currVals = new ArrayList<Double>();
+//            		currVals.add(result_prob.get(lineIndex));
+//            		probValues.set(value, currVals);
+//            	}
+            }
+            lineIndex++;
+            
+            
+        }
+        
+        //now find the highest for each class in probValues Arraylist
+        ArrayList<Double> probabilityValues = new ArrayList<Double>();
+        for(int cls = 0; cls <=9 ; cls++){
+        	probabilityValues = probValues.get(cls);
+        	double maxVal = Double.MIN_VALUE;
+        	int maxIndex = 0;
+        	for(int indx = 0; indx < probabilityValues.size(); indx++){
+        		if(probabilityValues.get(indx) > maxVal){
+        			maxVal = probabilityValues.get(indx);
+        			maxIndex = indx;
+        		}
+        		
+        	}
+        	System.out.println("Best image of class " + cls + " is at position " + (positions.get(cls).get(maxIndex)) * 28);
+        	System.out.println("The Maximum A POsteriori = " + maxVal);
+        }
+    }
     
 }

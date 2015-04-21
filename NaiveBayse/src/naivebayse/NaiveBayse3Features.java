@@ -34,8 +34,8 @@ public class NaiveBayse3Features {
     
     static double[] totalProbability = new double[10];   
     static double[] maxProbability = new double[10];
-    static double laplaceConstantNum = 10;
-    static double laplaceConstantDen = laplaceConstantNum * 2;
+    static double laplaceConstantNum = 1;
+    static double laplaceConstantDen = laplaceConstantNum * 3;
     static double laplaceConstant = laplaceConstantNum/laplaceConstantDen;
         
     
